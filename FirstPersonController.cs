@@ -1,4 +1,4 @@
-﻿// CHANGE LOG
+// CHANGE LOG
 // 
 // CHANGES || version VERSION
 //
@@ -65,7 +65,7 @@ public class FirstPersonController : MonoBehaviour
     #region Sprint
 
     public bool enableSprint = true;
-    public bool unlimitedSprint = false;
+    public bool unlimitedSprint = true;
     public KeyCode sprintKey = KeyCode.LeftShift;
     public float sprintSpeed = 7f;
     public float sprintDuration = 5f;
@@ -74,7 +74,7 @@ public class FirstPersonController : MonoBehaviour
     public float sprintFOVStepTime = 10f;
 
     // Sprint Bar
-    public bool useSprintBar = true;
+    public bool useSprintBar = false;
     public bool hideBarWhenFull = true;
     public Image sprintBarBG;
     public Image sprintBar;
@@ -274,50 +274,30 @@ public class FirstPersonController : MonoBehaviour
 
         #region Sprint
 
-        if(enableSprint)
+        if (enableSprint)
         {
-            if(isSprinting)
+            if (Input.GetKey(sprintKey))
             {
-                isZoomed = false;
+                isSprinting = true;
                 playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, sprintFOV, sprintFOVStepTime * Time.deltaTime);
-
-                // Drain sprint remaining while sprinting
-                if(!unlimitedSprint)
-                {
-                    sprintRemaining -= 1 * Time.deltaTime;
-                    if (sprintRemaining <= 0)
-                    {
-                        isSprinting = false;
-                        isSprintCooldown = true;
-                    }
-                }
             }
             else
             {
-                // Regain sprint while not sprinting
-                sprintRemaining = Mathf.Clamp(sprintRemaining += 1 * Time.deltaTime, 0, sprintDuration);
+                isSprinting = false;
             }
 
-            // Handles sprint cooldown 
-            // When sprint remaining == 0 stops sprint ability until hitting cooldown
-            if(isSprintCooldown)
+            // Update sprint bar visibility
+            if (useSprintBar && !unlimitedSprint)
             {
-                sprintCooldown -= 1 * Time.deltaTime;
-                if (sprintCooldown <= 0)
+                if (isSprinting)
                 {
-                    isSprintCooldown = false;
+                    sprintBarCG.alpha = 0; // Hide sprint bar when sprinting
                 }
-            }
-            else
-            {
-                sprintCooldown = sprintCooldownReset;
-            }
-
-            // Handles sprintBar 
-            if(useSprintBar && !unlimitedSprint)
-            {
-                float sprintRemainingPercent = sprintRemaining / sprintDuration;
-                sprintBar.transform.localScale = new Vector3(sprintRemainingPercent, 1f, 1f);
+                else
+                {
+                    // Show sprint bar based on sprintRemaining and hideBarWhenFull
+                    sprintBarCG.alpha = (hideBarWhenFull && sprintRemaining < sprintDuration) ? 1 : 0;
+                }
             }
         }
 
@@ -326,7 +306,7 @@ public class FirstPersonController : MonoBehaviour
         #region Jump
 
         // Gets input and calls jump method
-        if(enableJump && Input.GetKeyDown(jumpKey) && isGrounded)
+        if (enableJump && Input.GetKeyDown(jumpKey) && isGrounded)
         {
             Jump();
         }
